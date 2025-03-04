@@ -29,6 +29,7 @@ def agregar_cita():
     fecha = request.form['fecha']
     hora = request.form['hora']
     motivo = request.form['motivo']
+    medico_id = request.form['medico_id']
     paciente_id = request.form['paciente_id']
-    crear_cita(fecha=fecha, hora=hora, motivo=motivo, paciente_id=paciente_id)
+    crear_cita(fecha=fecha, hora=hora, motivo=motivo, paciente_id=paciente_id, medico_id=medico_id)
     return redirect(url_for('routes.ver_citas'))

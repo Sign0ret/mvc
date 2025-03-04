@@ -18,6 +18,10 @@
     <input type="text" name="motivo" id="motivo" placeholder="Motivo de la cita..." class="form-control" required>
   </div>
   <div class="mb-3">
+    <label for="medico_id" class="form-label">ID del Medico</label>
+    <input type="number" name="medico_id" id="medico_id" placeholder="#ID Médico..." class="form-control" required>
+  </div>
+  <div class="mb-3">
     <label for="paciente_id" class="form-label">ID del Paciente</label>
     <input type="number" name="paciente_id" id="paciente_id" placeholder="#ID Paciente..." class="form-control" required>
   </div>
@@ -34,6 +38,7 @@
       <th>Hora</th>
       <th>Motivo</th>
       <th>Estado</th>
+      <th>ID Medico</th>
       <th>ID Paciente</th>
     </tr>
   </thead>
@@ -45,6 +50,7 @@
       <td>{{ cita.hora }}</td>
       <td>{{ cita.motivo }}</td>
       <td>{{ cita.estado }}</td>
+      <td>{{ cita.medico_id }}</td>
       <td>{{ cita.paciente_id }}</td>
     </tr>
     {% endfor %}

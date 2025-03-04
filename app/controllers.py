@@ -6,8 +6,8 @@ def crear_usuario(nombre, rol):
     db.session.commit()
     return nuevo_usuario
 
-def crear_cita(fecha, hora, motivo, paciente_id):
-    nueva_cita = Cita(fecha=fecha, hora=hora, motivo=motivo, paciente_id=paciente_id)
+def crear_cita(fecha, hora, motivo, paciente_id, medico_id):
+    nueva_cita = Cita(fecha=fecha, hora=hora, motivo=motivo, paciente_id=paciente_id, medico_id=medico_id)
     db.session.add(nueva_cita)
     db.session.commit()
     return nueva_cita
