@@ -1,0 +1,15 @@
+# Ignorar el entorno virtual
+env/
+
+# Ignorar la base de datos SQLite
+*.db
+
+# Ignorar configuraciones específicas del sistema operativo
+__pycache__/
+*.pyc
+*.pyo
+
+# Ignorar configuraciones de IDEs (opcional)
+.vscode/
+.idea/
+
