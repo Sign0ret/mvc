@@ -1,31 +1,37 @@
 from app.models import Usuario, Enfermera, Medico, Administrador, Paciente, db
+from werkzeug.security import check_password_hash
 
-def crear_usuario(nombre, rol):
+def crear_usuario(nombre, password, rol):
     nuevo_usuario = Usuario(nombre=nombre, rol=rol)
+    nuevo_usuario.set_password(password)
     db.session.add(nuevo_usuario)
     db.session.commit()
     return nuevo_usuario
 
-def crear_enfermera(nombre):
+def crear_enfermera(nombre, password):
     nueva_enfermera = Enfermera(nombre=nombre, rol='enfermera')
+    nueva_enfermera.set_password(password)
     db.session.add(nueva_enfermera)
     db.session.commit()
     return nueva_enfermera
 
-def crear_medico(nombre, especialidad):
+def crear_medico(nombre, password, especialidad):
     nuevo_medico = Medico(nombre=nombre, rol='medico', especialidad=especialidad)
+    nuevo_medico.set_password(password)
     db.session.add(nuevo_medico)
     db.session.commit()
     return nuevo_medico
 
-def crear_administrador(nombre):
+def crear_administrador(nombre, password):
     nuevo_admin = Administrador(nombre=nombre, rol='administrador')
+    nuevo_admin.set_password(password)
     db.session.add(nuevo_admin)
     db.session.commit()
     return nuevo_admin
 
-def crear_paciente(nombre):
+def crear_paciente(nombre, password):
     nuevo_paciente = Paciente(nombre=nombre, rol='paciente')
+    nuevo_paciente.set_password(password)
     db.session.add(nuevo_paciente)
     db.session.commit()
     return nuevo_paciente
@@ -45,6 +51,13 @@ def obtener_administradores():
 
 def obtener_pacientes():
     return Paciente.query.all()
+
+# Funcion para obtener usuario por login
+def obtener_usuario_por_login(nombre, password):
+    usuario = Usuario.query.filter_by(nombre=nombre).first()
+    if usuario and check_password_hash(usuario.password_hash, password):
+        return usuario
+    return None
 
 # Funciones adicionales para obtener un usuario específico por ID
 def obtener_usuario_por_id(usuario_id):
@@ -128,4 +141,4 @@ def eliminar_administrador(admin_id):
 def eliminar_paciente(paciente_id):
     db.session.delete(Paciente.query.get(paciente_id))
     db.session.commit()
-    return True
+    return Truea

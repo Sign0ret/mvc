@@ -17,6 +17,8 @@
     <label for="motivo" class="form-label">Motivo</label>
     <input type="text" name="motivo" id="motivo" placeholder="Motivo de la cita..." class="form-control" required>
   </div>
+  
+  {% if current_user.rol in ['administrador', 'enfermera', 'paciente'] %}
   <div class="mb-3">
     <label for="medico_id" class="form-label">Médico</label>
     <select name="medico_id" id="medico_id" class="form-control" required>
@@ -26,6 +28,9 @@
       {% endfor %}
     </select>
   </div>
+  {% endif %}
+  
+  {% if current_user.rol in ['administrador', 'enfermera', 'medico'] %}
   <div class="mb-3">
     <label for="paciente_id" class="form-label">Paciente</label>
     <select name="paciente_id" id="paciente_id" class="form-control" required>
@@ -35,6 +40,8 @@
       {% endfor %}
     </select>
   </div>
+  {% endif %}
+  
   <button type="submit" class="btn btn-primary">Agregar Cita</button>
 </form>
 
@@ -48,8 +55,15 @@
       <th>Hora</th>
       <th>Motivo</th>
       <th>Estado</th>
-      <th>Médico</th>
-      <th>Paciente</th>
+      {% if current_user.rol != 'medico' %}
+        <th>Médico</th>
+      {% endif %}
+      {% if current_user.rol != 'paciente' %}
+        <th>Paciente</th>
+      {% endif %}
+      {% if current_user.rol == 'medico' %}
+        <th>Acción</th>
+      {% endif %}
     </tr>
   </thead>
   <tbody>
@@ -61,14 +75,21 @@
       <td>{{ cita.motivo }}</td>
       <td>{{ cita.estado }}</td>
 
-      <!-- Acceso directo a los atributos del médico y paciente -->
-      {% set medico = medicos | selectattr("id", "equalto", cita.medico_id) | first %}
-      {% set paciente = pacientes | selectattr("id", "equalto", cita.paciente_id) | first %}
+      {% if current_user.rol != 'medico' %}
+        <td>{{ cita.medico.nombre if cita.medico else 'N/A' }}</td>
+      {% endif %}
 
-      <!-- Mostrar nombres -->
-      <td>{{ medico.nombre if medico else 'N/A' }}</td>
-      <td>{{ paciente.nombre if paciente else 'N/A' }}</td>
+      {% if current_user.rol != 'paciente' %}
+        <td>{{ cita.paciente.nombre if cita.paciente else 'N/A' }}</td>
+      {% endif %}
 
+      {% if current_user.rol == 'medico' and cita.estado != 'Aceptada' %}
+        <td>
+          <form action="{{ url_for('routes.aceptar_cita', cita_id=cita.id) }}" method="POST">
+            <button type="submit" class="btn btn-success btn-sm">Aceptar Cita</button>
+          </form>
+        </td>
+      {% endif %}
     </tr>
     {% endfor %}
   </tbody>

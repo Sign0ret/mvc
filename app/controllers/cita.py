@@ -6,13 +6,19 @@ def crear_cita(fecha, hora, motivo, paciente_id, medico_id):
     db.session.commit()
     return nueva_cita
 
-def actualizar_estado_cita(cita_id, nuevo_estado):
+def obtener_citas():
+    return Cita.query.all()
+
+def obtener_citas_por_medico(id):
+    return Cita.query.filter(Cita.medico_id == id).all()
+
+def obtener_citas_por_paciente(id):
+    return Cita.query.filter(Cita.paciente_id == id).all()
+
+def validar_cita(cita_id):
     cita = Cita.query.get(cita_id)
     if not cita:
         return None
-    cita.estado = nuevo_estado
+    cita.estado = 'Aceptada'
     db.session.commit()
     return cita
-
-def obtener_citas():
-    return Cita.query.all()
