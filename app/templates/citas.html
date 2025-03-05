@@ -4,7 +4,7 @@
 <h1>Gestión de Citas</h1>
 
 <!-- Formulario para agregar citas -->
-<form action="/citas" method="POST" class="mb-4">
+<form action="{{ url_for('routes.ver_citas') }}" method="POST" class="mb-4">
   <div class="mb-3">
     <label for="fecha" class="form-label">Fecha</label>
     <input type="date" name="fecha" id="fecha" class="form-control" required>
@@ -18,12 +18,22 @@
     <input type="text" name="motivo" id="motivo" placeholder="Motivo de la cita..." class="form-control" required>
   </div>
   <div class="mb-3">
-    <label for="medico_id" class="form-label">ID del Medico</label>
-    <input type="number" name="medico_id" id="medico_id" placeholder="#ID Médico..." class="form-control" required>
+    <label for="medico_id" class="form-label">Médico</label>
+    <select name="medico_id" id="medico_id" class="form-control" required>
+      <option value="">Seleccione un médico</option>
+      {% for medico in medicos %}
+        <option value="{{ medico.id }}">{{ medico.nombre }} - {{ medico.especialidad }}</option>
+      {% endfor %}
+    </select>
   </div>
   <div class="mb-3">
-    <label for="paciente_id" class="form-label">ID del Paciente</label>
-    <input type="number" name="paciente_id" id="paciente_id" placeholder="#ID Paciente..." class="form-control" required>
+    <label for="paciente_id" class="form-label">Paciente</label>
+    <select name="paciente_id" id="paciente_id" class="form-control" required>
+      <option value="">Seleccione un paciente</option>
+      {% for paciente in pacientes %}
+        <option value="{{ paciente.id }}">{{ paciente.nombre }}</option>
+      {% endfor %}
+    </select>
   </div>
   <button type="submit" class="btn btn-primary">Agregar Cita</button>
 </form>
@@ -38,8 +48,8 @@
       <th>Hora</th>
       <th>Motivo</th>
       <th>Estado</th>
-      <th>ID Medico</th>
-      <th>ID Paciente</th>
+      <th>Médico</th>
+      <th>Paciente</th>
     </tr>
   </thead>
   <tbody>
@@ -50,8 +60,15 @@
       <td>{{ cita.hora }}</td>
       <td>{{ cita.motivo }}</td>
       <td>{{ cita.estado }}</td>
-      <td>{{ cita.medico_id }}</td>
-      <td>{{ cita.paciente_id }}</td>
+
+      <!-- Acceso directo a los atributos del médico y paciente -->
+      {% set medico = medicos | selectattr("id", "equalto", cita.medico_id) | first %}
+      {% set paciente = pacientes | selectattr("id", "equalto", cita.paciente_id) | first %}
+
+      <!-- Mostrar nombres -->
+      <td>{{ medico.nombre if medico else 'N/A' }}</td>
+      <td>{{ paciente.nombre if paciente else 'N/A' }}</td>
+
     </tr>
     {% endfor %}
   </tbody>

@@ -1,35 +1,39 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h1>Gestión de Usuarios</h1>
+<h1>Gestión de {{ tipo.capitalize() }}</h1>
 
-<!-- Formulario para agregar usuarios -->
-<form action="/usuarios" method="POST" class="mb-4">
+<!-- Formulario para agregar un nuevo usuario -->
+<form action="{{ url_for('routes.gestionar_usuarios', tipo=tipo) }}" method="POST" class="mb-4">
+  <input type="hidden" name="id" id="usuario_id">
   <div class="mb-3">
     <label for="nombre" class="form-label">Nombre</label>
     <input type="text" name="nombre" id="nombre" placeholder="Nombre" class="form-control" required>
   </div>
+  {% if tipo == 'medicos' %}
   <div class="mb-3">
-    <label for="rol" class="form-label">Rol</label>
-    <select name="rol" id="rol" class="form-select" required>
-      <option value="">Seleccionar rol...</option>
-      <option value="Administrador">Administrador</option>
-      <option value="Médico">Médico</option>
-      <option value="Enfermera">Enfermera</option>
-      <option value="Paciente">Paciente</option>
+    <label for="especialidad" class="form-label">Especialidad</label>
+    <select name="especialidad" id="especialidad" class="form-select" required>
+      <option value="">Seleccionar Especialidad...</option>
+      <option value="Especialidad1">Especialidad1</option>
+      <option value="Especialidad2">Especialidad2</option>
+      <option value="Especialidad3">Especialidad3</option>
+      <option value="Especialidad4">Especialidad4</option>
     </select>
   </div>
-  <button type="submit" class="btn btn-primary">Agregar Usuario</button>
+  {% endif %}
+  <button type="submit" class="btn btn-primary">Guardar {{ tipo.capitalize() }}</button>
 </form>
 
 <!-- Listado de usuarios -->
-<h2>Usuarios Registrados</h2>
+<h2>{{ tipo.capitalize() }} Registrados</h2>
 <table class="table table-striped">
   <thead>
     <tr>
       <th>ID</th>
       <th>Nombre</th>
-      <th>Rol</th>
+      {% if tipo == 'medicos' %}<th>Especialidad</th>{% endif %}
+      <th>Acciones</th>
     </tr>
   </thead>
   <tbody>
@@ -37,10 +41,110 @@
     <tr>
       <td>{{ usuario.id }}</td>
       <td>{{ usuario.nombre }}</td>
-      <td>{{ usuario.rol }}</td>
+      {% if tipo == 'medicos' %}<td>{{ usuario.especialidad }}</td>{% endif %}
+      <td>
+        <button class="btn btn-warning btn-sm" type="button" data-bs-toggle="modal" data-bs-target="#editarModal" onclick="editarUsuario('{{ usuario.id }}', '{{ usuario.nombre }}'{% if tipo == 'medicos' %}, '{{ usuario.especialidad }}'{% endif %})">Editar</button>
+        <button class="btn btn-danger btn-sm" onclick="eliminarUsuario('{{ tipo }}', '{{ usuario.id }}')">Eliminar</button>
+      </td>
     </tr>
     {% endfor %}
   </tbody>
 </table>
+
+<!-- Modal para editar usuario -->
+<div class="modal fade" id="editarModal" tabindex="-1" aria-labelledby="editarModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="editarModalLabel">Editar {{ tipo.capitalize() }}</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form id="editarUsuarioForm" method="POST">
+          <input type="hidden" name="id" id="usuario_id_modal">
+          <div class="mb-3">
+            <label for="nombre_modal" class="form-label">Nombre</label>
+            <input type="text" name="nombre" id="nombre_modal" placeholder="Nombre" class="form-control" required>
+          </div>
+          {% if tipo == 'medicos' %}
+          <div class="mb-3">
+            <label for="especialidad_modal" class="form-label">Especialidad</label>
+            <select name="especialidad" id="especialidad_modal" class="form-select" required>
+              <option value="">Seleccionar Especialidad...</option>
+              <option value="Especialidad1">Especialidad1</option>
+              <option value="Especialidad2">Especialidad2</option>
+              <option value="Especialidad3">Especialidad3</option>
+              <option value="Especialidad4">Especialidad4</option>
+            </select>
+          </div>
+          {% endif %}
+          <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Function to populate the modal with the current user data
+  function editarUsuario(id, nombre, especialidad = '') {
+    document.getElementById('usuario_id_modal').value = id;
+    document.getElementById('nombre_modal').value = nombre;
+    if (document.getElementById('especialidad_modal')) {
+      document.getElementById('especialidad_modal').value = especialidad;
+    }
+  }
+
+  // Handle the form submission to update the user
+  document.getElementById('editarUsuarioForm').addEventListener('submit', function(event) {
+    event.preventDefault();
+
+    const id = document.getElementById('usuario_id_modal').value;
+    const nombre = document.getElementById('nombre_modal').value;
+    const especialidad = document.getElementById('especialidad_modal') ? document.getElementById('especialidad_modal').value : '';
+
+    const data = {
+      id: id,
+      nombre: nombre,
+      especialidad: especialidad
+    };
+
+    fetch('/{{ tipo }}', {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(result => {
+      if (result.success) {
+        location.reload();  // Reload to see the updated list
+      } else {
+        alert("Error al actualizar el usuario");
+      }
+    })
+    .catch(error => console.error('Error:', error));
+  });
+
+  // Function to handle user deletion
+  function eliminarUsuario(tipo, id) {
+    if (confirm("¿Seguro que deseas eliminar este usuario?")) {
+        fetch(`/${tipo}`, {
+            method: "DELETE",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ id: id })  // Send ID in the request body
+        })
+        .then(response => {
+            if (response.ok) {
+                location.reload();  // Refresh the page after deletion
+            } else {
+                alert("Error al eliminar el usuario");
+            }
+        })
+        .catch(error => console.error("Error:", error));
+    }
+}
+</script>
 
 {% endblock %}

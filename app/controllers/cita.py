@@ -1,10 +1,4 @@
-from .models import Usuario, Cita, Paciente, Medico, Administrador, Enfermera, db
-
-def crear_usuario(nombre, rol):
-    nuevo_usuario = Usuario(nombre=nombre, rol=rol)
-    db.session.add(nuevo_usuario)
-    db.session.commit()
-    return nuevo_usuario
+from app.models import Cita, db
 
 def crear_cita(fecha, hora, motivo, paciente_id, medico_id):
     nueva_cita = Cita(fecha=fecha, hora=hora, motivo=motivo, paciente_id=paciente_id, medico_id=medico_id)
@@ -20,9 +14,5 @@ def actualizar_estado_cita(cita_id, nuevo_estado):
     db.session.commit()
     return cita
 
-def obtener_usuarios():
-    return Usuario.query.all()
-
 def obtener_citas():
     return Cita.query.all()
-
