@@ -1,6 +1,6 @@
 from app import create_app, db
 from flask_login import LoginManager
-from app.models import Usuario
+from app.models.objects.usuario import Usuario
 
 app = create_app()
 

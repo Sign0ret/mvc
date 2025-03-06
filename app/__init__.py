@@ -11,7 +11,7 @@ login_manager = LoginManager()
 def create_app():
     app = Flask(__name__)
     # Configuración de la base de datos
-    app.config['SECRET_KEY'] = 'your-secret-key'  # Change this!
+    app.config['SECRET_KEY'] = 'your-secret-key' 
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 

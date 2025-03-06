@@ -1,8 +1,9 @@
 from flask import Blueprint, render_template, request, redirect, url_for, abort, jsonify, flash
 from flask_login import login_user, logout_user, login_required, current_user
-from app.models import Usuario, Paciente, db
-from app.controllers.cita import crear_cita, obtener_citas, obtener_citas_por_medico, obtener_citas_por_paciente, validar_cita
-from app.controllers.usuario import (
+from app.models.objects.usuario import Usuario, db
+from app.models.objects.paciente import Paciente
+from app.controllers.cita_controller import crear_cita, obtener_todas_las_citas
+from app.controllers.usuario_controller import (
     crear_usuario , obtener_usuarios, obtener_usuario_por_login, actualizar_usuario, eliminar_usuario,
     crear_administrador , obtener_administradores, actualizar_administrador, eliminar_administrador,
     crear_enfermera , obtener_enfermeras, actualizar_enfermera, eliminar_enfermera,
@@ -56,26 +57,29 @@ def index():
 @login_required
 @role_required(['administrador', 'enfermera', 'medico', 'paciente'])
 def ver_citas():
+    """ Vista para ver y agendar citas, filtrando según el rol del usuario """
+    # Obtener citas según el rol del usuario
     if current_user.rol in ['administrador', 'enfermera']:
-        citas = obtener_citas()
+        citas = obtener_todas_las_citas()
         medicos = obtener_medicos()
         pacientes = obtener_pacientes()
     elif current_user.rol == 'medico':
-        citas = obtener_citas_por_medico(current_user.id)
+        citas = [cita for cita in obtener_todas_las_citas() if cita.medico_id == current_user.id]
         medicos = None
         pacientes = obtener_pacientes()
     elif current_user.rol == 'paciente':
-        citas = obtener_citas_por_paciente(current_user.id)
+        citas = [cita for cita in obtener_todas_las_citas() if cita.paciente_id == current_user.id]
         medicos = obtener_medicos()
         pacientes = None
     else:
         abort(403)  # Forbidden
 
+    # Si se envía el formulario, intentar crear una cita
     if request.method == 'POST':
         fecha = request.form['fecha']
         hora = request.form['hora']
         motivo = request.form['motivo']
-        
+
         if current_user.rol in ['administrador', 'enfermera']:
             medico_id = request.form['medico_id']
             paciente_id = request.form['paciente_id']
@@ -87,20 +91,28 @@ def ver_citas():
             paciente_id = current_user.id
         else:
             abort(403)  # Forbidden
-        
-        crear_cita(fecha=fecha, hora=hora, motivo=motivo, paciente_id=paciente_id, medico_id=medico_id)
+        crear_cita(fecha, hora, motivo, paciente_id, medico_id)
         return redirect(url_for('routes.ver_citas'))
     
     return render_template('citas.html', citas=citas, medicos=medicos, pacientes=pacientes, current_user=current_user)
+
 
 @bp.route('/aceptar_cita/<int:cita_id>', methods=['POST'])
 @login_required
 @role_required(['medico'])
 def aceptar_cita(cita_id):
-    if validar_cita(cita_id):
-        flash('Cita aceptada exitosamente', 'success')
-    else:
-        flash('No se pudo aceptar la cita', 'error')
+    """ Permite a un médico aceptar una cita """
+    cita = obtener_cita_por_id(cita_id)
+
+    if not cita:
+        flash('La cita no existe', 'danger')
+        return redirect(url_for('routes.ver_citas'))
+
+    if cita.medico_id != current_user.id:
+        abort(403)  # Forbidden, el médico solo puede aceptar sus propias citas
+
+    actualizar_estado_cita(cita_id, "Aceptada")
+    flash('Cita aceptada exitosamente', 'success')
     
     return redirect(url_for('routes.ver_citas'))
 
