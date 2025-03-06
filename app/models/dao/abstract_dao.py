@@ -14,7 +14,15 @@ class AbstractDAO(ABC):
         pass
 
     @abstractmethod
+    def update_by_id(self, entity_id):
+        pass
+
+    @abstractmethod
     def delete(self, entity):
+        pass
+
+    @abstractmethod
+    def delete_by_id(self, entity_id):
         pass
 
     @abstractmethod

@@ -1,14 +1,12 @@
 from flask import Blueprint, render_template, request, redirect, url_for, abort, jsonify, flash
 from flask_login import login_user, logout_user, login_required, current_user
-from app.models.objects.usuario import Usuario, db
-from app.models.objects.paciente import Paciente
-from app.controllers.cita_controller import crear_cita, obtener_todas_las_citas
+from app.controllers.cita_controller import crear_cita, obtener_citas, obtener_cita_por_id, actualizar_cita, eliminar_cita
 from app.controllers.usuario_controller import (
-    crear_usuario , obtener_usuarios, obtener_usuario_por_login, actualizar_usuario, eliminar_usuario,
-    crear_administrador , obtener_administradores, actualizar_administrador, eliminar_administrador,
-    crear_enfermera , obtener_enfermeras, actualizar_enfermera, eliminar_enfermera,
-    crear_medico , obtener_medicos, actualizar_medico, eliminar_medico,
-    crear_paciente , obtener_pacientes, actualizar_paciente, eliminar_paciente,
+    crear_usuario , obtener_usuarios, obtener_usuario_por_id, obtener_usuario_por_login, actualizar_usuario, eliminar_usuario,
+    crear_administrador , obtener_administradores, obtener_administrador_por_id, actualizar_administrador, eliminar_administrador,
+    crear_enfermera , obtener_enfermeras, obtener_enfermera_por_id, actualizar_enfermera, eliminar_enfermera,
+    crear_medico , obtener_medicos, obtener_administrador_por_id, actualizar_medico, eliminar_medico,
+    crear_paciente , obtener_pacientes, obtener_administrador_por_id, actualizar_paciente, eliminar_paciente,
 )
 from app.decorators import role_required
 
@@ -21,7 +19,7 @@ def login():
         nombre = request.form['nombre']
         password = request.form['password']
         user = obtener_usuario_por_login(nombre=nombre, password=password)
-        if user and user.check_password(password):
+        if user:
             login_user(user)
             return redirect(url_for('routes.index'))
         else:
@@ -60,15 +58,15 @@ def ver_citas():
     """ Vista para ver y agendar citas, filtrando según el rol del usuario """
     # Obtener citas según el rol del usuario
     if current_user.rol in ['administrador', 'enfermera']:
-        citas = obtener_todas_las_citas()
+        citas = obtener_citas()
         medicos = obtener_medicos()
         pacientes = obtener_pacientes()
     elif current_user.rol == 'medico':
-        citas = [cita for cita in obtener_todas_las_citas() if cita.medico_id == current_user.id]
+        citas = [cita for cita in obtener_citas() if cita.medico_id == current_user.id]
         medicos = None
         pacientes = obtener_pacientes()
     elif current_user.rol == 'paciente':
-        citas = [cita for cita in obtener_todas_las_citas() if cita.paciente_id == current_user.id]
+        citas = [cita for cita in obtener_citas() if cita.paciente_id == current_user.id]
         medicos = obtener_medicos()
         pacientes = None
     else:
@@ -111,7 +109,7 @@ def aceptar_cita(cita_id):
     if cita.medico_id != current_user.id:
         abort(403)  # Forbidden, el médico solo puede aceptar sus propias citas
 
-    actualizar_estado_cita(cita_id, "Aceptada")
+    actualizar_cita(cita_id, "Aceptada")
     flash('Cita aceptada exitosamente', 'success')
     
     return redirect(url_for('routes.ver_citas'))
