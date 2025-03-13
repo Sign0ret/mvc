@@ -16,5 +16,8 @@ def obtener_cita_por_id(entity_id):
 def actualizar_cita(entity_id, estado):
     return cita_dao.update_by_id(entity_id, estado)
 
+def editar_cita(entity_id, fecha, hora, motivo):
+    return cita_dao.edit_by_id(entity_id, fecha, hora, motivo)
+
 def eliminar_cita(entity_id):
     return cita_dao.delete_by_id(entity_id)

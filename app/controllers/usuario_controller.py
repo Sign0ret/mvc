@@ -80,7 +80,7 @@ def eliminar_medico(entity_id):
 # ADMINISTRADOR
 
 def crear_administrador(nombre, password):
-    entity = Administrador(nombre=nombre, rol="paciente")
+    entity = Administrador(nombre=nombre, rol="administrador")
     return administrador_dao.insert(entity, password)
     
 def obtener_administradores():

@@ -1,6 +1,7 @@
 from app import create_app, db
 from flask_login import LoginManager
 from app.models.objects.usuario import Usuario
+from app.controllers.usuario_controller import crear_administrador
 
 app = create_app()
 
@@ -15,6 +16,8 @@ def load_user(user_id):
 # Create all tables in the database
 with app.app_context():
     db.create_all()
+    if not Usuario.query.filter_by(rol='administrador').first():
+        crear_administrador('Admin', 'admin1234')
 
 if __name__ == '__main__':
     app.run(debug=True)

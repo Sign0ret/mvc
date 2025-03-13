@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, request, redirect, url_for, abort, jsonify, flash
 from flask_login import login_user, logout_user, login_required, current_user
-from app.controllers.cita_controller import crear_cita, obtener_citas, obtener_cita_por_id, actualizar_cita, eliminar_cita
+from app.controllers.cita_controller import crear_cita, obtener_citas, obtener_cita_por_id, actualizar_cita, editar_cita, eliminar_cita
 from app.controllers.usuario_controller import (
     crear_usuario , obtener_usuarios, obtener_usuario_por_id, obtener_usuario_por_login, actualizar_usuario, eliminar_usuario,
     crear_administrador , obtener_administradores, obtener_administrador_por_id, actualizar_administrador, eliminar_administrador,
@@ -19,11 +19,13 @@ def login():
         nombre = request.form['nombre']
         password = request.form['password']
         user = obtener_usuario_por_login(nombre=nombre, password=password)
-        if user:
+        
+        if user is not None:
             login_user(user)
             return redirect(url_for('routes.index'))
         else:
             flash('Invalid username or password')
+    
     return render_template('login.html')
 
 @bp.route('/logout')
@@ -51,7 +53,7 @@ def index():
 
 # Rutas Citas
 
-@bp.route('/citas', methods=['GET', 'POST'])
+@bp.route('/citas', methods=['GET', 'POST', 'PUT'])
 @login_required
 @role_required(['administrador', 'enfermera', 'medico', 'paciente'])
 def ver_citas():
@@ -92,6 +94,16 @@ def ver_citas():
         crear_cita(fecha, hora, motivo, paciente_id, medico_id)
         return redirect(url_for('routes.ver_citas'))
     
+    # Manejar solicitud PUT para editar cita
+    if request.method == 'PUT':
+        data = request.get_json()
+        cita_id = data['id']
+        fecha = data.get('fecha')
+        hora = data.get('hora')
+        motivo = data.get('motivo')
+        editar_cita(cita_id, fecha, hora, motivo)
+        return jsonify({"success": True}), 200
+
     return render_template('citas.html', citas=citas, medicos=medicos, pacientes=pacientes, current_user=current_user)
 
 
@@ -114,6 +126,12 @@ def aceptar_cita(cita_id):
     
     return redirect(url_for('routes.ver_citas'))
 
+@bp.route('/borrar_cita/<int:cita_id>', methods=['POST'])
+@login_required
+@role_required(['administrador', 'enfermera', 'medico'])
+def borrar_cita(cita_id):
+    eliminar_cita(cita_id)
+    return redirect(url_for('routes.ver_citas'))
 
 # Rutas Usuarios
 

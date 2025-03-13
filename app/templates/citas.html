@@ -61,7 +61,7 @@
       {% if current_user.rol != 'paciente' %}
         <th>Paciente</th>
       {% endif %}
-      {% if current_user.rol == 'medico' %}
+      {% if current_user.rol in ['administrador', 'enfermera', 'medico'] %}
         <th>Acción</th>
       {% endif %}
     </tr>
@@ -76,23 +76,123 @@
       <td>{{ cita.estado }}</td>
 
       {% if current_user.rol != 'medico' %}
-        <td>{{ cita.medico.nombre if cita.medico else 'N/A' }}</td>
+        <td>
+          {% set medico = medicos | selectattr('id', '==', cita.medico_id) | first %}
+          {{ medico.nombre if medico else 'N/A' }}
+        </td>
       {% endif %}
 
       {% if current_user.rol != 'paciente' %}
-        <td>{{ cita.paciente.nombre if cita.paciente else 'N/A' }}</td>
+        <td>
+          {% set paciente = pacientes | selectattr('id', '==', cita.paciente_id) | first %}
+          {{ paciente.nombre if paciente else 'N/A' }}
+        </td>
       {% endif %}
 
-      {% if current_user.rol == 'medico' and cita.estado != 'Aceptada' %}
+
+      {% if current_user.rol in ['administrador', 'enfermera', 'medico'] %}
         <td>
-          <form action="{{ url_for('routes.aceptar_cita', cita_id=cita.id) }}" method="POST">
-            <button type="submit" class="btn btn-success btn-sm">Aceptar Cita</button>
-          </form>
-        </td>
+          <div class="d-flex">
+            {% if current_user.rol == 'medico' and cita.estado != 'Aceptada' %}
+              <form action="{{ url_for('routes.aceptar_cita', cita_id=cita.id) }}" method="POST">
+                <button type="submit" class="btn btn-success btn-sm">Aceptar Cita</button>
+              </form>
+            {% endif %}
+            <button class="btn btn-warning btn-sm ms-2" type="button" data-bs-toggle="modal" data-bs-target="#editarCitaModal" onclick="editarCita('{{ cita.id }}', '{{ cita.fecha }}', '{{ cita.hora }}', '{{ cita.motivo }}', '{{ cita.medico_id if cita.medico_id else '' }}', '{{ cita.paciente_id if cita.paciente_id else '' }}')">Editar</button>
+            <form action="{{ url_for('routes.borrar_cita', cita_id=cita.id) }}" method="POST" style="display: inline-block; margin-left: 5px;">
+              <input type="hidden" name="_method" value="DELETE">
+              <button type="submit" class="btn btn-danger btn-sm">Eliminar Cita</button>
+            </form>
+          </div>
+        </td> 
       {% endif %}
     </tr>
     {% endfor %}
   </tbody>
 </table>
+
+<!-- Modal para editar cita -->
+<div class="modal fade" id="editarCitaModal" tabindex="-1" aria-labelledby="editarCitaModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="editarCitaModalLabel">Editar Cita</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form id="editarCitaForm" method="POST">
+          <input type="hidden" name="id" id="cita_id_modal">
+          <div class="mb-3">
+            <label for="fecha_modal" class="form-label">Fecha</label>
+            <input type="date" name="fecha" id="fecha_modal" class="form-control" required>
+          </div>
+          <div class="mb-3">
+            <label for="hora_modal" class="form-label">Hora</label>
+            <input type="time" name="hora" id="hora_modal" class="form-control" required>
+          </div>
+          <div class="mb-3">
+            <label for="motivo_modal" class="form-label">Motivo</label>
+            <input type="text" name="motivo" id="motivo_modal" placeholder="Motivo de la cita..." class="form-control" required>
+          </div>
+          <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  function editarCita(id, fecha, hora, motivo, medicoId = '', pacienteId = '') {
+    document.getElementById('cita_id_modal').value = id;
+    document.getElementById('fecha_modal').value = fecha;
+    document.getElementById('hora_modal').value = hora;
+    document.getElementById('motivo_modal').value = motivo;
+    
+    if (document.getElementById('medico_id_modal')) {
+      document.getElementById('medico_id_modal').value = medicoId;
+    }
+    
+    if (document.getElementById('paciente_id_modal')) {
+      document.getElementById('paciente_id_modal').value = pacienteId;
+    }
+  }
+
+  document.getElementById('editarCitaForm').addEventListener('submit', function(event) {
+    event.preventDefault();
+
+    const id = document.getElementById('cita_id_modal').value;
+    const fecha = document.getElementById('fecha_modal').value;
+    const hora = document.getElementById('hora_modal').value;
+    const motivo = document.getElementById('motivo_modal').value;
+    const medicoId = document.getElementById('medico_id_modal') ? document.getElementById('medico_id_modal').value : '';
+    const pacienteId = document.getElementById('paciente_id_modal') ? document.getElementById('paciente_id_modal').value : '';
+
+    const data = {
+      id: id,
+      fecha: fecha,
+      hora: hora,
+      motivo: motivo,
+      medico_id: medicoId,
+      paciente_id: pacienteId
+    };
+
+    fetch('/citas', {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(result => {
+      if (result.success) {
+        location.reload();  // Recargar la página para ver la cita actualizada
+      } else {
+        alert("Error al actualizar la cita");
+      }
+    })
+    .catch(error => console.error('Error:', error));
+  });
+</script>
 
 {% endblock %}

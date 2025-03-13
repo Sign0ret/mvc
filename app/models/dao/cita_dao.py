@@ -22,6 +22,17 @@ class CitaDAO(AbstractDAO):
             return entity
         return None
 
+    def edit_by_id(self, entity_id, fecha, hora, motivo):
+        print("lo intento")
+        entity = self.model.query.get(entity_id)
+        if entity:
+            entity.fecha = fecha
+            entity.hora = hora
+            entity.motivo = motivo
+            db.session.commit()
+            return entity
+        return None
+
     def delete(self, entity):
         db.session.delete(entity)
         db.session.commit()

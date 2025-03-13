@@ -5,3 +5,4 @@ class Medico(Usuario):
     __tablename__ = 'medico'
     id = db.Column(db.Integer, db.ForeignKey('usuario.id'), primary_key=True)
     especialidad = db.Column(db.String(100), nullable=False)
+    
