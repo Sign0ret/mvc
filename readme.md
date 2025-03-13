@@ -37,7 +37,7 @@
 ## Comandos para instalar
 1. Activar el virtual environment
 ```
-python -m venv env
+python3 -m venv env
 ```
 ```
 source env/bin/activate
